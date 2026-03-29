@@ -1,0 +1,175 @@
+Metadata-Version: 2.4
+Name: secrets-scanner
+Version: 1.0.0
+Summary: CLI tool to detect hardcoded secrets and high-entropy strings in codebases and git history
+Author: Komal Sharma
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Security
+Classifier: Topic :: Software Development :: Quality Assurance
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Dynamic: author
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: requires-python
+Dynamic: summary
+
+# 🔍 Secrets Scanner CLI
+
+A Python CLI tool that detects hardcoded secrets, API keys, tokens, and high-entropy strings across codebases and Git history. Built for integration into CI/CD pipelines.
+
+## Features
+
+- **Regex-based detection** — Covers 20+ secret types including AWS keys, GitHub tokens, Stripe keys, JWT tokens, database connection strings, and more
+- **Shannon entropy analysis** — Flags high-entropy strings that pattern matching may miss
+- **Git history scanning** — Scans across all commits, not just current state
+- **`.secretsignore` support** — Exclude files and paths from scanning
+- **Severity classification** — CRITICAL / HIGH / MEDIUM findings
+- **JSON & HTML reports** — Machine-readable output for pipeline integration
+- **PR comments** — GitHub Actions workflow posts findings directly to PRs
+- **CI/CD integration** — Exit code support for blocking builds on critical findings
+
+## Installation
+
+```bash
+git clone https://github.com/komal-sharma/secrets-scanner.git
+cd secrets-scanner
+pip install -e .
+```
+
+## Usage
+
+```bash
+# Scan current directory
+secrets-scanner .
+
+# Scan specific path
+secrets-scanner /path/to/project
+
+# Include git history
+secrets-scanner . --git-history
+
+# Only show critical findings
+secrets-scanner . --severity critical
+
+# Save JSON report
+secrets-scanner . --output report.json
+
+# Save HTML report
+secrets-scanner . --html report.html
+
+# Exclude test files
+secrets-scanner . --exclude "*.test.js" --exclude "tests/*"
+
+# Disable entropy analysis (faster)
+secrets-scanner . --no-entropy
+
+# Fail CI/CD build on critical findings
+secrets-scanner . --fail-on-critical
+
+# Fail on high or above
+secrets-scanner . --fail-on-high
+```
+
+## Secret Types Detected
+
+| Category | Examples |
+|----------|---------|
+| **Cloud Keys** | AWS Access Key ID, AWS Secret Key, Azure Storage Key, Azure SAS Token |
+| **Source Control** | GitHub PAT, GitHub OAuth Token, GitHub Actions Token |
+| **Communication** | Slack Bot Token, Slack User Token, Twilio API Key, SendGrid, Mailgun |
+| **Payments** | Stripe Secret Key, Stripe Publishable Key |
+| **Google** | Google API Key, Google OAuth Client Secret |
+| **Auth** | JWT Tokens, Bearer Tokens, Generic API Keys |
+| **Database** | MySQL, PostgreSQL, MongoDB, Redis connection strings |
+| **Hardcoded Creds** | Passwords, secrets, tokens in source code |
+| **Entropy** | High-entropy base64 and hex strings |
+
+## CI/CD Integration (GitHub Actions)
+
+The included workflow (`.github/workflows/secrets-scan.yml`) automatically:
+- Scans every push and pull request
+- Posts a findings summary as a PR comment
+- Uploads JSON and HTML reports as artifacts
+- Fails the build if critical secrets are detected
+
+```yaml
+- name: Run Secrets Scanner
+  run: |
+    secrets-scanner . \
+      --git-history \
+      --severity high \
+      --output secrets-report.json \
+      --html secrets-report.html \
+      --fail-on-critical
+```
+
+## .secretsignore
+
+Create a `.secretsignore` file in your project root to exclude paths:
+
+```
+# Exclude test files
+tests/*
+*.test.py
+
+# Exclude example configs
+*.example
+*.sample
+```
+
+## Output Example
+
+```
+╔══════════════════════════════════════════════╗
+║          🔍  Secrets Scanner CLI  v1.0.0      ║
+╚══════════════════════════════════════════════╝
+
+  #1 [CRITICAL] AWS Access Key ID
+     File:  ./config/settings.py
+     Line:  42
+     Match: AKIA3X...ABCD
+     Info:  Amazon Web Services Access Key ID
+
+  #2 [HIGH] High Entropy String (Base64)
+     File:  ./src/auth.py
+     Line:  18
+     Match: dGhpcyBpcyBh...  (entropy: 5.23)
+     Info:  High-entropy base64-like string detected
+
+──────────────────────────────────────────────
+  Scan Summary
+──────────────────────────────────────────────
+  Files scanned : 47
+  Scan duration : 0.84s
+  Total findings: 2
+  ├─ CRITICAL: 1
+  ├─ HIGH    : 1
+  └─ MEDIUM  : 0
+```
+
+## Project Structure
+
+```
+secrets-scanner/
+├── secrets_scanner/
+│   ├── __init__.py       # Package metadata
+│   ├── cli.py            # CLI entrypoint with colorized output
+│   ├── scanner.py        # Core scanning engine
+│   ├── patterns.py       # 20+ regex patterns with severity
+│   ├── entropy.py        # Shannon entropy analysis
+│   └── reporter.py       # JSON and HTML report generation
+├── .github/
+│   └── workflows/
+│       └── secrets-scan.yml  # GitHub Actions CI/CD workflow
+├── tests/
+├── .secretsignore        # Default ignore patterns
+├── setup.py
+└── README.md
+```
+
+## Author
+
+**Komal Sharma** — Application Security Engineer  
+[LinkedIn](https://linkedin.com/in/komal-sharma-204180201) | [GitHub](https://github.com/komal-sharma)

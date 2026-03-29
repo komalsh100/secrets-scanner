@@ -1,0 +1,2 @@
+[console_scripts]
+secrets-scanner = secrets_scanner.cli:main
